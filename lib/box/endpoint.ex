@@ -4,6 +4,7 @@ defmodule Box.Endpoint do
 
   plug Plug.Logger
   plug Plug.Parsers, parsers: [:urlencoded, :multipart]
+  plug :handle_cors
   plug :match
   plug :dispatch
 
@@ -21,6 +22,22 @@ defmodule Box.Endpoint do
     end
   end
 
+  # OPTIONS
+  options "/upload/:folder_id/:sig" do
+    send_resp(conn, 200, "")
+  end
+
+  # Default 404
+  match _ do
+    send_resp(conn, 404, "")
+  end
+
+  # CORS
+  defp handle_cors(conn, _) do
+    conn
+    |> put_resp_header("Access-Control-Allow-Origin", "*")
+  end
+
   defp validate_signature(folder_id, sig) do
     case Box.Signature.verify(folder_id, sig) do
       true -> :ok
@@ -33,9 +50,5 @@ defmodule Box.Endpoint do
       %{"file" => file = %Plug.Upload{}} -> {:ok, file}
       _ -> {:error, :no_file}
     end
-  end
-
-  match _ do
-    send_resp(conn, 404, "")
   end
 end
