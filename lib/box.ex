@@ -15,6 +15,10 @@ defmodule Box do
          new_name <- FileName.deduplicate(filename, folder_contents),
          {:ok, box_id} <- @client.upload(folder_id, new_name, filepath) do
       {:ok, box_id}
+    else
+      # Retry
+      {:error, :filename_already_taken} -> upload(folder_id, filename, filepath)
+      error -> error
     end
   end
 

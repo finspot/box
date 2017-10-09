@@ -26,6 +26,7 @@ defmodule Box.Client do
 
     case post("https://upload.box.com/api/2.0/files/content", mp) do
       %{status: 201, body: %{"entries" => [%{"id" => box_id}]}} -> {:ok, box_id}
+      %{status: 409} -> {:error, :filename_already_taken}
       _ -> {:error, :box_error}
     end
   end
