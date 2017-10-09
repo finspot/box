@@ -1,6 +1,7 @@
 defmodule Box do
-  alias Box.Client
   alias Box.FileName
+
+  @client Application.get_env(:box, :client)
 
   @doc """
   Helper function for current time
@@ -10,9 +11,9 @@ defmodule Box do
   end
 
   def upload(folder_id, filename, filepath) do
-    with {:ok, folder_contents} = Client.files(folder_id),
+    with {:ok, folder_contents} <- @client.files(folder_id),
          new_name <- FileName.deduplicate(filename, folder_contents),
-         {:ok, box_id} <- Client.upload(folder_id, new_name, filepath) do
+         {:ok, box_id} <- @client.upload(folder_id, new_name, filepath) do
       {:ok, box_id}
     end
   end
