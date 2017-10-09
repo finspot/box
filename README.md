@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/finspot/box.svg?branch=master)](https://travis-ci.org/finspot/box)
+
 # Box
 
 Proxy for the Box API with direct file uploads on pre-signed folders
