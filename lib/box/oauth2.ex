@@ -6,14 +6,14 @@ defmodule Box.OAuth2 do
   def call(env, next, _opts) do
     env
     |> Tesla.Middleware.Headers.call([], %{
-      "Authorization" => "Bearer #{token()}",
-      "As-User" => user_id()
-    })
+         "Authorization" => "Bearer #{token()}",
+         "As-User" => user_id()
+       })
     |> Tesla.run(next)
   end
 
   def token do
-    Box.TokenCache.get || fetch_and_store_token()
+    Box.TokenCache.get() || fetch_and_store_token()
   end
 
   defp fetch_and_store_token do
@@ -23,10 +23,14 @@ defmodule Box.OAuth2 do
   end
 
   defp fetch_token do
-    %{status: 200, body: body} = Tesla.post(
-      @token_url,
-      "grant_type=#{@grant_type}&client_id=#{client_id()}&client_secret=#{client_secret()}&assertion=#{assertion()}"
-    )
+    %{status: 200, body: body} =
+      Tesla.post(
+        @token_url,
+        "grant_type=#{@grant_type}&client_id=#{client_id()}&client_secret=#{client_secret()}&assertion=#{
+          assertion()
+        }"
+      )
+
     %{"access_token" => token, "expires_in" => ttl} = Poison.decode!(body)
     {token, ttl}
   end
@@ -42,9 +46,10 @@ defmodule Box.OAuth2 do
 
   # Decoding the private key into a JOSE-compatible key
   defp decoded_private_key do
-    [encoded_key] = private_key()
-    |> String.replace("\\n", "\n")
-    |> :public_key.pem_decode()
+    [encoded_key] =
+      private_key()
+      |> String.replace("\\n", "\n")
+      |> :public_key.pem_decode()
 
     encoded_key
     |> :public_key.pem_entry_decode(passphrase())
@@ -58,7 +63,7 @@ defmodule Box.OAuth2 do
       box_sub_type: @box_sub_type,
       aud: @token_url,
       jti: Base.encode16(:crypto.strong_rand_bytes(64)),
-      exp: Box.get_timestamp + 10
+      exp: Box.get_timestamp() + 10
     }
     |> Joken.token()
     |> Joken.with_header_arg("kid", public_key_id())

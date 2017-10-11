@@ -10,7 +10,7 @@ defmodule Box.Application do
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      Plug.Adapters.Cowboy.child_spec(:http, Box.Endpoint, [], [port: port()]),
+      Plug.Adapters.Cowboy.child_spec(:http, Box.Endpoint, [], port: port()),
       Box.TokenCache
     ]
 

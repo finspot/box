@@ -2,11 +2,11 @@ defmodule Box.Endpoint do
   use Plug.Router
   require Logger
 
-  plug Plug.Logger
-  plug Plug.Parsers, parsers: [:urlencoded, :multipart]
-  plug :handle_cors
-  plug :match
-  plug :dispatch
+  plug(Plug.Logger)
+  plug(Plug.Parsers, parsers: [:urlencoded, :multipart])
+  plug(:handle_cors)
+  plug(:match)
+  plug(:dispatch)
 
   post "/upload/:folder_id/:sig" do
     with :ok <- validate_signature(folder_id, sig),

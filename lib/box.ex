@@ -17,9 +17,11 @@ defmodule Box do
       {:ok, box_id}
     else
       # Retry
-      {:error, :filename_already_taken} -> upload(folder_id, filename, filepath)
-      error -> error
+      {:error, :filename_already_taken} ->
+        upload(folder_id, filename, filepath)
+
+      error ->
+        error
     end
   end
-
 end

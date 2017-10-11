@@ -1,3 +1,3 @@
 use Mix.Config
 
-config :box, client: Box.Client
+config(:box, client: Box.Client)

@@ -6,11 +6,11 @@ defmodule Box.TokenCache do
   def child_spec(_args) do
     %{
       id: __MODULE__,
-      start: { __MODULE__, :start_link, []},
+      start: {__MODULE__, :start_link, []},
       restart: :permanent,
       shutdown: 5000,
       type: :worker
-     }
+    }
   end
 
   def start_link do
@@ -28,6 +28,7 @@ defmodule Box.TokenCache do
   nil
   """
   def get, do: get(Box.get_timestamp())
+
   def get(now) do
     case :ets.lookup(@cache_table, @cache_key) do
       [{@cache_key, {_token, exp}}] when now > exp -> nil
@@ -38,7 +39,7 @@ defmodule Box.TokenCache do
 
   def store(token, ttl) do
     # 1 minute leeway
-    exp = Box.get_timestamp + ttl - 60
+    exp = Box.get_timestamp() + ttl - 60
     :ets.insert(@cache_table, {@cache_key, {token, exp}})
     :ok
   end

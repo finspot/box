@@ -13,11 +13,12 @@ defmodule Box.FileName do
   def deduplicate(filename, list) do
     {basename, _nb, ext} = split_file(filename)
 
-    next_page_number = list
-    |> Enum.map(&split_file/1)
-    |> Enum.filter(fn {name, _nb, _ext} -> name == basename end)
-    |> Enum.map(fn {_name, nb, _ext} -> nb end)
-    |> next_number()
+    next_page_number =
+      list
+      |> Enum.map(&split_file/1)
+      |> Enum.filter(fn {name, _nb, _ext} -> name == basename end)
+      |> Enum.map(fn {_name, nb, _ext} -> nb end)
+      |> next_number()
 
     basename <> @page_split <> "#{next_page_number}" <> ext
   end
@@ -33,10 +34,11 @@ defmodule Box.FileName do
   5
   """
   def next_number([]), do: 1
+
   def next_number(files) do
     files
     |> Enum.map(fn
-         nb when is_number nb -> nb + 1
+         nb when is_number(nb) -> nb + 1
          _ -> 2
        end)
     |> Enum.max()
@@ -64,5 +66,4 @@ defmodule Box.FileName do
       _ -> {basename, nil, extname}
     end
   end
-
 end

@@ -1,3 +1,3 @@
 use Mix.Config
 
-config :box, client: Box.Mock
+config(:box, client: Box.Mock)
