@@ -1,5 +1,6 @@
 defmodule Box do
   alias Box.FileName
+  require Logger
 
   @client Application.get_env(:box, :client)
 
@@ -11,6 +12,8 @@ defmodule Box do
   end
 
   def upload(folder_id, filename, filepath) do
+    Logger.info("Starting upload of #{filename} into folder #{folder_id}")
+
     with {:ok, folder_contents} <- @client.files(folder_id),
          new_name <- FileName.deduplicate(filename, folder_contents),
          {:ok, box_id} <- @client.upload(folder_id, new_name, filepath) do

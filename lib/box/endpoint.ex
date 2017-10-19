@@ -1,9 +1,13 @@
 defmodule Box.Endpoint do
   use Plug.Router
+  use Plug.ErrorHandler
   require Logger
 
+  # 50 MB max size
+  @max_length 51 * 1024 * 1024
+
   plug(Plug.Logger)
-  plug(Plug.Parsers, parsers: [:urlencoded, :multipart])
+  plug(Plug.Parsers, parsers: [:urlencoded, :multipart], length: @max_length)
   plug(:handle_cors)
   plug(:match)
   plug(:dispatch)
@@ -18,7 +22,7 @@ defmodule Box.Endpoint do
       {:error, :no_file} -> send_resp(conn, 400, "No file in params")
       {:error, :box_error} -> send_resp(conn, 502, "Box.com did not respond")
       {:error, :folder_not_found} -> send_resp(conn, 404, "No folder found")
-      _ -> send_resp(conn, 500, "An error happened")
+      err -> handle_errors(conn, err)
     end
   end
 
@@ -30,6 +34,12 @@ defmodule Box.Endpoint do
   # Default 404
   match _ do
     send_resp(conn, 404, "")
+  end
+
+  # Generic error handler for plug
+  def handle_errors(conn, err) do
+    Logger.error(["An error happened", inspect(err, pretty: true)])
+    send_resp(conn, 500, "An error happened")
   end
 
   # CORS
