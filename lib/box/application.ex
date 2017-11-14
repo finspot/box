@@ -11,7 +11,8 @@ defmodule Box.Application do
     # List all child processes to be supervised
     children = [
       Plug.Adapters.Cowboy.child_spec(:http, Box.Endpoint, [], port: port()),
-      Box.TokenCache
+      Box.TokenCache,
+      Box.Folders
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
