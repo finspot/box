@@ -1,5 +1,7 @@
 defmodule Box do
-  alias Box.FileName
+  alias Box.Folders
+  alias Box.Folder
+
   require Logger
 
   @client Application.get_env(:box, :client)
@@ -14,13 +16,12 @@ defmodule Box do
   def upload(folder_id, filename, filepath) do
     Logger.info("Starting upload of #{filename} into folder #{folder_id}")
 
-    with {:ok, folder_contents} <- @client.files(folder_id),
-         new_name <- FileName.deduplicate(filename, folder_contents),
+    with {:ok, new_name} <- folder_id |> Folders.folder() |> Folder.pick_filename(filename),
          {:ok, box_id} <- @client.upload(folder_id, new_name, filepath) do
       {:ok, box_id}
     else
-      # Retry
       {:error, :filename_already_taken} ->
+        Box.Folders.reset(folder_id)
         upload(folder_id, filename, filepath)
 
       error ->
