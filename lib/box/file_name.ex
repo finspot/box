@@ -1,14 +1,12 @@
 defmodule Box.FileName do
-  @page_split " - page "
-
   @doc """
   Update a file name not to be duplicated, ignoring extensions
   iex> Box.FileName.deduplicate("foo.pdf", [])
-  "foo - page 1.pdf"
+  "foo.pdf"
   iex> Box.FileName.deduplicate("foo.pdf", ["foo.pdf", "bar.pdf"])
-  "foo - page 2.pdf"
-  iex> Box.FileName.deduplicate("foo.pdf", ["foo - page 1.pdf", "foo - page 3.exe"])
-  "foo - page 4.pdf"
+  "foo (1).pdf"
+  iex> Box.FileName.deduplicate("foo.pdf", ["foo (1).pdf", "foo (3).exe"])
+  "foo (4).pdf"
   """
   def deduplicate(filename, list) do
     {basename, _nb, ext} = split_file(filename)
@@ -20,26 +18,29 @@ defmodule Box.FileName do
       |> Enum.map(fn {_name, nb, _ext} -> nb end)
       |> next_number()
 
-    basename <> @page_split <> "#{next_page_number}" <> ext
+    case next_page_number do
+      nil -> basename <> ext
+      i -> basename <> " (#{i})" <> ext
+    end
   end
 
   @doc """
-  Finds the next available number in a list, assuming nils are 1
+  Finds the next available number in a list
 
   iex> Box.FileName.next_number([])
-  1
+  nil
   iex> Box.FileName.next_number([nil, nil])
-  2
+  1
   iex> Box.FileName.next_number([nil, 4, 1])
   5
   """
-  def next_number([]), do: 1
+  def next_number([]), do: nil
 
   def next_number(files) do
     files
     |> Enum.map(fn
          nb when is_number(nb) -> nb + 1
-         _ -> 2
+         _ -> 1
        end)
     |> Enum.max()
   end
@@ -50,7 +51,7 @@ defmodule Box.FileName do
   - page number
   - extension
 
-  iex> Box.FileName.split_file("foo - page 4.pdf")
+  iex> Box.FileName.split_file("foo (4).pdf")
   {"foo", 4, ".pdf"}
   iex> Box.FileName.split_file("bar.jpeg")
   {"bar", nil, ".jpeg"}
@@ -59,7 +60,7 @@ defmodule Box.FileName do
     extname = Path.extname(filename)
     basename = Path.basename(filename, extname)
 
-    with [name, page] <- String.split(basename, @page_split),
+    with [_, name, page] <- Regex.run(~r/^(.*) \((\d+)\)$/, basename),
          {number, _rest} <- Integer.parse(page) do
       {name, number, extname}
     else
