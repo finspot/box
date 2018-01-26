@@ -1,4 +1,6 @@
 defmodule Box.FileName do
+  @windows_reserved_chars ["<", ">", ":", "\"", "/", "\\", "|", "?", "*"]
+
   @doc """
   Update a file name not to be duplicated, ignoring extensions
   iex> Box.FileName.deduplicate("foo.pdf", [])
@@ -9,7 +11,7 @@ defmodule Box.FileName do
   "foo (4).pdf"
   """
   def deduplicate(filename, list) do
-    {basename, _nb, ext} = split_file(filename)
+    {basename, _nb, ext} = filename |> sanitize |> split_file
 
     next_page_number =
       list
@@ -39,9 +41,9 @@ defmodule Box.FileName do
   def next_number(files) do
     files
     |> Enum.map(fn
-         nb when is_number(nb) -> nb + 1
-         _ -> 1
-       end)
+      nb when is_number(nb) -> nb + 1
+      _ -> 1
+    end)
     |> Enum.max()
   end
 
@@ -66,5 +68,14 @@ defmodule Box.FileName do
     else
       _ -> {basename, nil, extname}
     end
+  end
+
+  @doc """
+  Sanitize a filename to handle windows filesystem
+  iex> Box.FileName.sanitize("Relevé : 1.jpeg")
+  "Relevé - 1.jpeg"
+  """
+  def sanitize(filename) do
+    String.replace(filename, @windows_reserved_chars, "-")
   end
 end
