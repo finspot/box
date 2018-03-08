@@ -1,0 +1,7 @@
+- name: deploy
+  tag: master
+  service: box
+  type: push
+  image_name: 880161163633.dkr.ecr.eu-central-1.amazonaws.com/pretto-box
+  registry: https://880161163633.dkr.ecr.eu-central-1.amazonaws.com
+  dockercfg_service: dockercfg_generator
