@@ -7,6 +7,8 @@ defmodule Box.Client do
   plug(Box.OAuth2)
   plug(Tesla.Middleware.JSON)
 
+  adapter(Tesla.Adapter.Hackney)
+
   def files(folder_id) do
     case get("/folders/#{folder_id}/items") do
       %{status: 200, body: body} -> {:ok, extract_files(body)}

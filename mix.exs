@@ -27,6 +27,7 @@ defmodule Box.Mixfile do
       {:tesla, "~> 0.7"},
       {:joken, "~> 1.0"},
       {:poison, ">= 1.0.0"},
+      {:hackney, "~> 1.11"},
       {:distillery, "~> 1.5", runtime: false}
     ]
   end
