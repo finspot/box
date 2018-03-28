@@ -12,6 +12,63 @@ defmodule Box.Endpoint do
   plug(:match)
   plug(:dispatch)
 
+  get "/upload/resumable/:folder_id/:sig" do
+    with :ok <- validate_signature(folder_id, sig) do
+      %{
+        "resumableChunkNumber" => chunk_nb,
+        "resumableIdentifier" => uid
+      } = conn.params
+
+      case Box.ChunkHandler.has_chunk?(uid, String.to_integer(chunk_nb)) do
+        true ->
+          send_resp(conn, 200, "")
+
+        false ->
+          send_resp(conn, 404, "")
+      end
+    else
+      {:error, :invalid_signature} -> send_resp(conn, 401, "Invalid signature")
+      err -> handle_errors(conn, err)
+    end
+  end
+
+  post "/upload/resumable/:folder_id/:sig" do
+    with :ok <- validate_signature(folder_id, sig) do
+      %{
+        "resumableChunkNumber" => chunk_nb,
+        "resumableFilename" => filename,
+        "resumableIdentifier" => uid,
+        "resumableTotalChunks" => total_chunks,
+        "file" => %Plug.Upload{
+          path: chunk_path
+        }
+      } = conn.params
+
+      case Box.ChunkHandler.handle_chunk(
+             uid,
+             String.to_integer(chunk_nb),
+             chunk_path,
+             String.to_integer(total_chunks)
+           ) do
+        {:in_progress, _progress} ->
+          send_resp(conn, 200, "")
+
+        {:finished, path} ->
+          with {:ok, box_id} <- Box.upload(folder_id, filename, path) do
+            send_resp(conn, 201, box_id)
+          else
+            err -> handle_errors(conn, err)
+          end
+
+        err ->
+          handle_errors(conn, err)
+      end
+    else
+      {:error, :invalid_signature} -> send_resp(conn, 401, "Invalid signature")
+      err -> handle_errors(conn, err)
+    end
+  end
+
   post "/upload/:folder_id/:sig" do
     with :ok <- validate_signature(folder_id, sig),
          {:ok, file} <- get_file_from_params(conn),
@@ -27,7 +84,7 @@ defmodule Box.Endpoint do
   end
 
   # OPTIONS
-  options "/upload/:folder_id/:sig" do
+  options _ do
     send_resp(conn, 200, "")
   end
 
