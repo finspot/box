@@ -3,7 +3,6 @@ defmodule Box.ChunkHandler do
   Stateless chunk handling and merging yay!
   """
   @tmpdir "/tmp"
-  @outfile "out"
 
   # Public API
   def has_chunk?(file_id, chunk_nb) do
@@ -38,7 +37,7 @@ defmodule Box.ChunkHandler do
 
   def compact_chunks!(file_id) do
     folder = folder(file_id)
-    outfile = folder <> "/" <> @outfile
+    outfile = folder <> ".out"
     file = File.stream!(outfile)
 
     # Compact into out file
