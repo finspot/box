@@ -18,19 +18,8 @@ defmodule Box.ChunkHandler do
     :ok = File.cp(path, dest)
 
     case current_chunk_count(file_id) do
-      ^total_chunks ->
-        outfile = folder <> "/" <> @outfile
-        file = File.stream!(outfile)
-
-        Path.wildcard("#{folder}/*.chunk")
-        |> Stream.map(&File.read!/1)
-        |> Stream.into(file)
-        |> Stream.run()
-
-        {:finished, outfile}
-
-      count ->
-        {:in_progress, count / total_chunks}
+      ^total_chunks -> {:finished, compact_chunks!(file_id)}
+      count -> {:in_progress, count / total_chunks}
     end
   end
 
@@ -45,6 +34,24 @@ defmodule Box.ChunkHandler do
   def current_chunk_count(file_id) do
     {:ok, files} = File.ls(folder(file_id))
     length(files)
+  end
+
+  def compact_chunks!(file_id) do
+    folder = folder(file_id)
+    outfile = folder <> "/" <> @outfile
+    file = File.stream!(outfile)
+
+    # Compact into out file
+    Path.wildcard("#{folder}/*.chunk")
+    |> Stream.map(&File.read!/1)
+    |> Stream.into(file)
+    |> Stream.run()
+
+    # Remove chunks
+    Path.wildcard("#{folder}/*.chunk")
+    |> Enum.each(&File.rm!/1)
+
+    outfile
   end
 
   @doc """
